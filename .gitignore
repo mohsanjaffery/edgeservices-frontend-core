@@ -14,6 +14,9 @@ packaged.zip
 index.zip
 witch.zip
 
+# makefile workfile
+.custom.mk
+
 # dependencies
 **/node_modules
 **/coverage
