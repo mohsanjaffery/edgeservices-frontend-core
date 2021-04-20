@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: ACFS3 - CloudFront
 Transform: AWS::Serverless-2016-10-31
 Parameters:
@@ -11,8 +11,8 @@ Parameters:
   SubDomain:
     Description: Subdomain
     Type: String
-  SubDomain:
-    Description: Subdomain
+  WafAcl:
+    Description: Waf Acl Id
     Type: String
   S3BucketLogs:
     Description: Logging Bucket
@@ -40,10 +40,11 @@ Parameters:
     Type: String
 Conditions:
   CreateApexConfig: !Equals
-    - !Ref 'CreateApex'
-    - 'yes'
-  ShouldCreateAcmResource:
-    !Equals [true, !Ref WithDomainName]
+    - !Ref "CreateApex"
+    - "yes"
+  ShouldCreateAcmResource: !Equals
+    - true
+    - !Ref "WithDomainName"
 Resources:
   CloudFrontFunctionRole:
     Type: AWS::IAM::Role
@@ -52,7 +53,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Sid: AllowLambdaServiceToAssumeRole
             Effect: Allow
@@ -66,7 +67,7 @@ Resources:
       Policies:
         - PolicyName: CloudfrontPolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -88,7 +89,7 @@ Resources:
                   - lambda:DisableReplication
                   - lambda:EnableReplication
                   - lambda:GetAlias
-                Resource: !Sub 'arn:${AWS::Partition}:lambda:us-east-1:${AWS::AccountId}:function:*'
+                Resource: !Sub "arn:${AWS::Partition}:lambda:us-east-1:${AWS::AccountId}:function:*"
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
@@ -102,7 +103,7 @@ Resources:
                   - s3:GetObjectAcl
                   - s3:GetBucketAcl
                   - s3:PutBucketAcl
-                Resource: !Sub 'arn:${AWS::Partition}:s3:::*'
+                Resource: !Sub "arn:${AWS::Partition}:s3:::*"
               - Effect: Allow
                 Action:
                   - cloudfront:CreateDistribution
@@ -115,7 +116,8 @@ Resources:
                   - cloudfront:UntagResource
                   - cloudfront:UpdateDistribution
                   - cloudfront:ListCloudFrontOriginAccessIdentities
-                Resource: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*'
+                  - cloudfront:ListDistributionsByWebACLId
+                Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*"
               - Effect: Allow
                 Action:
                   - cloudfront:CreateCachePolicy
@@ -123,7 +125,7 @@ Resources:
                   - cloudfront:GetCachePolicy
                   - cloudfront:ListCachePolicies
                   - cloudfront:UpdateCachePolicy
-                Resource: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:cache-policy/*'
+                Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:cache-policy/*"
       Tags:
         - Key: Solution
           Value: ACFS3
@@ -131,7 +133,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
-      Role: !GetAtt 'CloudFrontFunctionRole.Arn'
+      Role: !GetAtt "CloudFrontFunctionRole.Arn"
       CodeUri: ../source/python/cloudfront
       Runtime: python3.8
       Timeout: 300
@@ -140,41 +142,41 @@ Resources:
     Type: AWS::CloudFormation::CustomResource
     Properties:
       loglevel: info
-      Apex: !Ref 'CreateApex'
-      Subdomain: !Ref 'SubDomain'
-      Domain: !Ref 'DomainName'
-      StackName: !Ref 'StackName'
-      LogsBucket: !Ref 'S3BucketLogsName'
-      CertArn: !Ref 'CertificateArn'
-      SecureEdgeFunctionArn: !Ref 'SecuredEdgeLambdaArn'
-      RoleArn: !GetAtt 'CloudFrontFunctionRole.Arn'
-      ServiceToken: !GetAtt 'CloudfrontCustomFunction.Arn'
-      AmplifyHosting: !Ref 'AmplifyHosting'
-      Branch: !Ref 'Branch'
-      WithDomainName: !Ref 'WithDomainName'
-      ModifyOriginResponse: !Ref 'ModifyOriginResponse'
+      WafAclId: !Ref "WafAcl"
+      Apex: !Ref "CreateApex"
+      Subdomain: !Ref "SubDomain"
+      Domain: !Ref "DomainName"
+      StackName: !Ref "StackName"
+      LogsBucket: !Ref "S3BucketLogsName"
+      CertArn: !Ref "CertificateArn"
+      SecureEdgeFunctionArn: !Ref "SecuredEdgeLambdaArn"
+      RoleArn: !GetAtt "CloudFrontFunctionRole.Arn"
+      ServiceToken: !GetAtt "CloudfrontCustomFunction.Arn"
+      AmplifyHosting: !Ref "AmplifyHosting"
+      Branch: !Ref "Branch"
+      WithDomainName: !Ref "WithDomainName"
+      ModifyOriginResponse: !Ref "ModifyOriginResponse"
   Route53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
     Condition: ShouldCreateAcmResource
     Properties:
-      HostedZoneName: !Sub '${DomainName}.'
+      HostedZoneName: !Sub "${DomainName}."
       RecordSets:
-        - Name: !Sub '${SubDomain}.${DomainName}'
+        - Name: !Sub "${SubDomain}.${DomainName}"
           Type: A
           AliasTarget:
-            DNSName: !GetAtt 'CloudFrontDistribution.DomainName'
+            DNSName: !GetAtt "CloudFrontDistribution.DomainName"
             EvaluateTargetHealth: false
             HostedZoneId: Z2FDTNDATAQYW2
   ApexRoute53RecordSetGroup:
     Condition: CreateApexConfig
     Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneName: !Sub '${DomainName}.'
+      HostedZoneName: !Sub "${DomainName}."
       RecordSets:
-        - Name: !Ref 'DomainName'
+        - Name: !Ref "DomainName"
           Type: A
           AliasTarget:
-            DNSName: !GetAtt 'CloudFrontDistribution.DomainName'
+            DNSName: !GetAtt "CloudFrontDistribution.DomainName"
             EvaluateTargetHealth: false
             HostedZoneId: Z2FDTNDATAQYW2
-

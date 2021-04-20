@@ -24,6 +24,8 @@ def log_exception(e):
 @helper.create
 def create(event, context):
     logger.info("got CREATE")
+    waf_acl = event["ResourceProperties"]["WafAclId"]
+    print(">>>>>", waf_acl, "<<<<<<<<")
     apex_from_config = event["ResourceProperties"]["Apex"]
     subdomain = event["ResourceProperties"]["Subdomain"]
     domain_name = event["ResourceProperties"]["Domain"]
@@ -40,7 +42,8 @@ def create(event, context):
     certificate_arn = event["ResourceProperties"]["CertArn"]
     create_apex_config = True if (apex_from_config == "yes") else False
     create_domain_name = True if (with_domain_name == "true") else False
-    create_lambda_origin_response = True if (modify_origin_response == "true") else False
+    create_lambda_origin_response = True if (
+        modify_origin_response == "true") else False
 
     tags = {
         "Items": [
@@ -50,7 +53,6 @@ def create(event, context):
             }
         ]
     }
-
 
     config = {
         "CallerReference": f"{uuid.uuid4()}",
@@ -92,7 +94,7 @@ def create(event, context):
         "HttpVersion": "http2",
         "DefaultRootObject": "index.html",
         "IsIPV6Enabled": True,
-        "Comment": f"{subdomain}.{domain_name}" if create_domain_name else "Distribution for static website" ,
+        "Comment": f"{subdomain}.{domain_name}" if create_domain_name else "Distribution for static website",
         "Logging": {
             "Enabled": True,
             "Bucket":  bucket_logs,
@@ -105,44 +107,40 @@ def create(event, context):
                 {
                     "DomainName":  amplify_hosting_url,
                     "Id": "myCustomOrigin",
-                    "CustomOriginConfig" : {
-                             "HTTPPort" : 80,
-                             "HTTPSPort" : 443,
-                             "OriginProtocolPolicy" : "match-viewer"
-                         }
+                    "CustomOriginConfig": {
+                        "HTTPPort": 80,
+                        "HTTPSPort": 443,
+                        "OriginProtocolPolicy": "match-viewer"
+                    }
 
                 }
             ]
         },
-        "PriceClass": "PriceClass_All"
+        "PriceClass": "PriceClass_All",
+        "WebACLId": waf_acl
     }
 
     if create_domain_name:
-     config["Aliases"] = {
-                "Quantity": 1,
-                "Items": [f"{domain_name}" if create_apex_config else f"{subdomain}.{domain_name}"]
-     }
-     config["ViewerCertificate"] = {
-                "ACMCertificateArn":  certificate_arn,
-                "MinimumProtocolVersion": "TLSv1.1_2016",
-                "SSLSupportMethod": "sni-only"
-     }
-
+        config["Aliases"] = {
+            "Quantity": 1,
+            "Items": [f"{domain_name}" if create_apex_config else f"{subdomain}.{domain_name}"]
+        }
+        config["ViewerCertificate"] = {
+            "ACMCertificateArn":  certificate_arn,
+            "MinimumProtocolVersion": "TLSv1.1_2016",
+            "SSLSupportMethod": "sni-only"
+        }
 
     if create_lambda_origin_response:
-     config["DefaultCacheBehavior"]["LambdaFunctionAssociations"] = {
-                "Quantity": 1,
-                "Items": [
-                    {
-                        "EventType": "origin-response",
-                        "LambdaFunctionARN": lambda_arnWver
-                    }
-                ]
-     }
-
-
-    logger.debug(config)
-
+        config["DefaultCacheBehavior"]["LambdaFunctionAssociations"] = {
+            "Quantity": 1,
+            "Items": [
+                {
+                    "EventType": "origin-response",
+                    "LambdaFunctionARN": lambda_arnWver
+                }
+            ]
+        }
     response = cloudfront.create_distribution_with_tags(
         DistributionConfigWithTags={
             "DistributionConfig": config,
@@ -161,7 +159,7 @@ def update(event, context):
     logger.info("got UPDATE")
 
     response = cloudfront.get_distribution(
-    Id=event["PhysicalResourceId"])  # get details
+        Id=event["PhysicalResourceId"])  # get details
     etag = response["ETag"]
     config = response["Distribution"]["DistributionConfig"]
     distroid = response["Distribution"]["Id"]
@@ -173,49 +171,47 @@ def update(event, context):
     with_domain_name = event["ResourceProperties"]["WithDomainName"]
     modify_origin_response = event["ResourceProperties"]["ModifyOriginResponse"]
 
-
     certificate_arn = event["ResourceProperties"]["CertArn"]
     create_apex_config = True if (apex_from_config == "yes") else False
     create_domain_name = True if (with_domain_name == "true") else False
-    create_lambda_origin_response = True if (modify_origin_response == "true") else False
-
+    create_lambda_origin_response = True if (
+        modify_origin_response == "true") else False
 
     config["Comment"] = f"{subdomain}.{domain_name}" if create_domain_name else "Distribution for static website"
     if create_domain_name:
-     config["Aliases"] = {
-                "Quantity": 1,
-                "Items": [f"{domain_name}" if create_apex_config else f"{subdomain}.{domain_name}"]
-     }
-     config["ViewerCertificate"] = {
-                "ACMCertificateArn":  certificate_arn,
-                "MinimumProtocolVersion": "TLSv1.1_2016",
-                "SSLSupportMethod": "sni-only"
-     }
+        config["Aliases"] = {
+            "Quantity": 1,
+            "Items": [f"{domain_name}" if create_apex_config else f"{subdomain}.{domain_name}"]
+        }
+        config["ViewerCertificate"] = {
+            "ACMCertificateArn":  certificate_arn,
+            "MinimumProtocolVersion": "TLSv1.1_2016",
+            "SSLSupportMethod": "sni-only"
+        }
     else:
-     config["Aliases"] = {
+        config["Aliases"] = {
             "Quantity": 0
-     }
-     config["ViewerCertificate"] = {
+        }
+        config["ViewerCertificate"] = {
             "CloudFrontDefaultCertificate": True,
             "MinimumProtocolVersion": "TLSv1",
             "CertificateSource": "cloudfront"
-     }
-
+        }
 
     if create_lambda_origin_response:
-     config["DefaultCacheBehavior"]["LambdaFunctionAssociations"] = {
-                "Quantity": 1,
-                "Items": [
-                    {
-                        "EventType": "origin-response",
-                        "LambdaFunctionARN": lambda_arnWver
-                    }
-                ]
-     }
+        config["DefaultCacheBehavior"]["LambdaFunctionAssociations"] = {
+            "Quantity": 1,
+            "Items": [
+                {
+                    "EventType": "origin-response",
+                    "LambdaFunctionARN": lambda_arnWver
+                }
+            ]
+        }
     else:
-     config["DefaultCacheBehavior"]["LambdaFunctionAssociations"] = {
-                "Quantity": 0
-     }
+        config["DefaultCacheBehavior"]["LambdaFunctionAssociations"] = {
+            "Quantity": 0
+        }
 
     logger.debug(config)
     response = cloudfront.update_distribution(
@@ -225,6 +221,7 @@ def update(event, context):
 @helper.delete
 def delete(event, context):
     logger.info("got DELETE")
+    # TODO: deal with NoSuchDistribution Exception
     response = cloudfront.get_distribution(
         Id=event["PhysicalResourceId"])  # get details
     etag = response["ETag"]
@@ -239,7 +236,6 @@ def delete(event, context):
     etag = response["ETag"]
     distroid = response["Distribution"]["Id"]
     cloudfront.delete_distribution(Id=distroid, IfMatch=etag)
-
 
 
 def is_disabled(result):
