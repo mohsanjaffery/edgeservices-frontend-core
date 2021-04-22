@@ -71,7 +71,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - iam:UpdateRoleDescription
                   - iam:AttachRolePolicy
                   - iam:PutRolePolicy
                   - iam:CreateServiceLinkedRole
@@ -106,17 +105,32 @@ Resources:
                 Resource: !Sub "arn:${AWS::Partition}:s3:::*"
               - Effect: Allow
                 Action:
+                  - wafv2:GetWebACL
+                  - wafv2:UpdateWebACL
+                  - wafv2:UntagResource
+                  - wafv2:TagResource
+                Resource: !Sub "arn:${AWS::Partition}:wafv2:${AWS::Region}:${AWS::AccountId}:global/webacl/*"
+              - Effect: Allow
+                Action:
+                  - wafv2:ListWebACLs
+                  - wafv2:ListIPSets
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudfront:ListCloudFrontOriginAccessIdentities
+                  - cloudfront:ListDistributionsByWebACLId
+                Resource: "*"
+              - Effect: Allow
+                Action:
                   - cloudfront:CreateDistribution
                   - cloudfront:CreateDistributionWithTags
                   - cloudfront:DeleteDistribution
                   - cloudfront:GetDistribution
                   - cloudfront:GetDistributionConfig
+                  - cloudfront:UpdateDistribution
                   - cloudfront:ListTagsForResource
                   - cloudfront:TagResource
                   - cloudfront:UntagResource
-                  - cloudfront:UpdateDistribution
-                  - cloudfront:ListCloudFrontOriginAccessIdentities
-                  - cloudfront:ListDistributionsByWebACLId
                 Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*"
               - Effect: Allow
                 Action:

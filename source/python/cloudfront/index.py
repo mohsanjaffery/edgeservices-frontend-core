@@ -10,7 +10,7 @@ helper = CfnResource(json_logging=True, log_level='DEBUG',
                      boto_level='DEBUG', sleep_on_delete=120)
 
 try:
-    cloudfront = boto3.client("cloudfront")
+    cloudfront = boto3.client("cloudfront", region_name="us-east-1")
 except Exception as e:
     logger.error(e, exc_info=True)
     helper.init_failure(e)
@@ -25,7 +25,6 @@ def log_exception(e):
 def create(event, context):
     logger.info("got CREATE")
     waf_acl = event["ResourceProperties"]["WafAclId"]
-    print(">>>>>", waf_acl, "<<<<<<<<")
     apex_from_config = event["ResourceProperties"]["Apex"]
     subdomain = event["ResourceProperties"]["Subdomain"]
     domain_name = event["ResourceProperties"]["Domain"]
@@ -37,7 +36,7 @@ def create(event, context):
     with_domain_name = event["ResourceProperties"]["WithDomainName"]
     modify_origin_response = event["ResourceProperties"]["ModifyOriginResponse"]
 
-    amplify_hosting_url = repo_branch+'.'+amplify_hosting
+    amplify_hosting_url = f"{repo_branch}.{amplify_hosting}"
 
     certificate_arn = event["ResourceProperties"]["CertArn"]
     create_apex_config = True if (apex_from_config == "yes") else False
@@ -147,10 +146,6 @@ def create(event, context):
             "Tags": tags
         }
     )
-    helper.Data.update({"DomainName": response["Distribution"]["DomainName"]})
-    helper.Data.update({"DistroId": response["Distribution"]["Id"]})
-    helper.Data.update({"Status": response["Distribution"]["Status"]})
-    helper.Data.update({"ETag": response["ETag"]})
     return response["Distribution"]["Id"]
 
 
