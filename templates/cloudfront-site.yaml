@@ -131,7 +131,7 @@ Resources:
                   - cloudfront:ListTagsForResource
                   - cloudfront:TagResource
                   - cloudfront:UntagResource
-                Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*"
+                Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution*"
               - Effect: Allow
                 Action:
                   - cloudfront:CreateCachePolicy
@@ -140,11 +140,6 @@ Resources:
                   - cloudfront:ListCachePolicies
                   - cloudfront:UpdateCachePolicy
                 Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:cache-policy/*"
-              - Effect: Allow
-                Action:
-                  - cloudfront:*
-                  - wafv2:*
-                Resource: "*"
       Tags:
         - Key: Solution
           Value: ACFS3
