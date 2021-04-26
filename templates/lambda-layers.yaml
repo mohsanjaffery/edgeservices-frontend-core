@@ -43,22 +43,22 @@ Resources:
     Properties:
       Name: SDKArn
       Type: String
-      Value: !Ref AWSSDK
+      Value: !Ref 'AWSSDK'
   CustomResourceHelperArn:
     Type: AWS::SSM::Parameter
     Properties:
       Name: CustomResourceHelperArn
       Type: String
-      Value: !Ref CustomResourceHelper
+      Value: !Ref 'CustomResourceHelper'
   DecoratorsArn:
     Type: AWS::SSM::Parameter
     Properties:
       Name: Decorators
       Type: String
-      Value: !Ref Decorators
+      Value: !Ref 'Decorators'
   BotoUtilsArn:
     Type: AWS::SSM::Parameter
     Properties:
       Name: BotoUtilsArn
       Type: String
-      Value: !Ref BotoUtils
+      Value: !Ref 'BotoUtils'

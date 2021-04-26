@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ACFS3 - CloudFront
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  StackName:
+    Description: Stack name
+    Type: String
+Conditions: {}
+Resources:
+  CfnFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - wafv2.amazonaws.com
+                - cloudformation.amazonaws.com
+      Policies:
+        - PolicyName: CloudformationPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:CreateServiceLinkedRole
+                  - iam:ListRoles
+                  - iam:PassRole
+                Resource: arn:aws:iam::*:role/aws-service-role/*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectAcl
+                  - s3:GetBucketAcl
+                  - s3:PutBucketAcl
+                Resource: !Sub "arn:${AWS::Partition}:s3:::*"
+              - Effect: Allow
+                Action:
+                  - wafv2:*
+                  - cloudformation:*
+                Resource: "*"
+      Tags:
+        - Key: Solution
+          Value: ACFS3
+  CfnFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt "CfnFunctionRole.Arn"
+      CodeUri: ../source/python/waf
+      Runtime: python3.8
+      Timeout: 300
+      Description: global waf resources is us-east-1
+  WafGlobalStack:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      loglevel: info
+      Stack: !Ref "StackName"
+      RoleArn: !GetAtt "CfnFunctionRole.Arn"
+      ServiceToken: !GetAtt "CfnFunction.Arn"
+Outputs:
+  WebAclArn:
+    Value: !GetAtt WafGlobalStack.WebAclArn
+  WebAclId:
+    Value: !GetAtt WafGlobalStack.WebAclId
