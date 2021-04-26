@@ -109,7 +109,7 @@ Resources:
                   - wafv2:UpdateWebACL
                   - wafv2:UntagResource
                   - wafv2:TagResource
-                Resource: !Sub "arn:${AWS::Partition}:wafv2:${AWS::Region}:${AWS::AccountId}:global/webacl/*"
+                Resource: !Sub "arn:${AWS::Partition}:wafv2:us-east-1:${AWS::AccountId}:global/webacl/*"
               - Effect: Allow
                 Action:
                   - wafv2:ListWebACLs
@@ -140,6 +140,11 @@ Resources:
                   - cloudfront:ListCachePolicies
                   - cloudfront:UpdateCachePolicy
                 Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:cache-policy/*"
+              - Effect: Allow
+                Action:
+                  - cloudfront:*
+                  - wafv2:*
+                Resource: "*"
       Tags:
         - Key: Solution
           Value: ACFS3
