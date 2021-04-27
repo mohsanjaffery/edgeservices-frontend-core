@@ -1,5 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-09
-
+AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   Repository:
     Type: String
@@ -15,7 +14,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -26,25 +25,28 @@ Resources:
       Policies:
         - PolicyName: Amplify
           PolicyDocument:
-            Version: 2012-10-17
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action: 'amplify:*'
+                Action: amplify:*
                 Resource: '*'
-
   AmplifyApp:
-    Type: 'AWS::Amplify::App'
+    Type: AWS::Amplify::App
     Properties:
       Name: static-frontent
-      Repository: !Ref Repository
+      Repository: !Ref 'Repository'
       Description: a test website
-      OauthToken: !Join ['', ['{{resolve:secretsmanager:', !Ref Tokenname , ':SecretString:::}}' ]]
+      OauthToken: !Join
+        - ''
+        - - '{{resolve:secretsmanager:'
+          - !Ref 'Tokenname'
+          - :SecretString:::}}
       EnvironmentVariables:
         - Name: _DISABLE_L2_CACHE
           Value: 'true'
       AutoBranchCreationConfig:
-        EnableAutoBranchCreation: True
-        EnableAutoBuild: False
+        EnableAutoBranchCreation: true
+        EnableAutoBuild: false
       Tags:
         - Key: Name
           Value: web-test
@@ -63,10 +65,10 @@ Resources:
   AmplifyBranch:
     Type: AWS::Amplify::Branch
     Properties:
-      BranchName: !Ref Branch
-      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: !Ref 'Branch'
+      AppId: !GetAtt 'AmplifyApp.AppId'
       Description: Develop Branch
       EnableAutoBuild: false
 Outputs:
   DefaultDomain:
-    Value: !GetAtt AmplifyApp.DefaultDomain
+    Value: !GetAtt 'AmplifyApp.DefaultDomain'

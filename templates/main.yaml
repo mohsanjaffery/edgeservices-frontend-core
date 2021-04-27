@@ -99,7 +99,9 @@ Resources:
   WafStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: ./waf.yaml
+      TemplateURL: ./waf-stack.yaml
+      Parameters:
+        StackName: !Sub "${AWS::StackName}-Global-WAF"
       Tags:
         - Key: Solution
           Value: ACFS3

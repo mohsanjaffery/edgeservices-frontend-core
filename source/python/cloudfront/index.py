@@ -140,6 +140,7 @@ def create(event, context):
                 }
             ]
         }
+    # response = cloudfront.create_distribution(DistributionConfig=config)
     response = cloudfront.create_distribution_with_tags(
         DistributionConfigWithTags={
             "DistributionConfig": config,
