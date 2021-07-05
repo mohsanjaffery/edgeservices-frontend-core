@@ -147,6 +147,10 @@ def create(event, context):
             "Tags": tags
         }
     )
+    helper.Data.update({"DomainName": response["Distribution"]["DomainName"]})
+    helper.Data.update({"DistroId": response["Distribution"]["Id"]})
+    helper.Data.update({"Status": response["Distribution"]["Status"]})
+    helper.Data.update({"ETag": response["ETag"]})
     return response["Distribution"]["Id"]
 
 
