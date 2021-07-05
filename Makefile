@@ -93,11 +93,29 @@ deploy: init package-function
 	--parameter-overrides \
             SubDomain=$(SUB_DOMAIN) \
             DomainName=$(DOMAIN_NAME) \
-			Repository=$(REPOSITORY) \
-			Branch=$(BRANCH) \
-			Tokenname=$(TOKEN_NAME) \
-			WithDomainName="$(USE_DOMAIN_NAME)" \
-			ModifyOriginResponse=$(MODIFY_ORIGIN_RESPONSE)
+	    Repository=$(REPOSITORY) \
+	    Branch=$(BRANCH) \
+	    Tokenname=$(TOKEN_NAME) \
+	    WithDomainName="$(USE_DOMAIN_NAME)" \
+	    ModifyOriginResponse=$(MODIFY_ORIGIN_RESPONSE)
+
+update: 
+
+
+	@printf "\n--> Updating templates with new configuration ...\n"
+	@aws cloudformation deploy \
+	--template-file ./templates/packaged.template \
+	--stack-name $(STACK_NAME) \
+	--region $(AWS_REGION) \
+	--capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM \
+	--parameter-overrides \
+            SubDomain=$(SUB_DOMAIN) \
+            DomainName=$(DOMAIN_NAME) \
+	    Repository=$(REPOSITORY) \
+	    Branch=$(BRANCH) \
+	    Tokenname=$(TOKEN_NAME) \
+	    WithDomainName="$(USE_DOMAIN_NAME)" \
+	    ModifyOriginResponse=$(MODIFY_ORIGIN_RESPONSE)
 
 deploy-layers: init package-layers
 

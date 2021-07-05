@@ -214,6 +214,10 @@ def update(event, context):
         }
 
     logger.debug(config)
+    helper.Data.update({"DomainName": response["Distribution"]["DomainName"]})
+    helper.Data.update({"DistroId": response["Distribution"]["Id"]})
+    helper.Data.update({"Status": response["Distribution"]["Status"]})
+    helper.Data.update({"ETag": response["ETag"]})
     response = cloudfront.update_distribution(
         DistributionConfig=config, Id=distroid, IfMatch=etag)
 
